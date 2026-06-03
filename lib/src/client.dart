@@ -17,13 +17,14 @@ class FlagForgeClient {
   bool get isInitialized => _initialized;
 
   Future<void> initialize() async {
+    if (_initialized) return;
     await _fetchAndUpdate();
     _timer = Timer.periodic(_config.refreshInterval, (_) => _doRefresh());
     _initialized = true;
   }
 
   Future<void> refresh() async {
-    await _doRefresh();
+    await _fetchAndUpdate();
   }
 
   bool isEnabled(String key) {
@@ -44,7 +45,7 @@ class FlagForgeClient {
     final body = _config.context?.toJson() ?? {};
 
     final result = await _adapter.post(url, headers, body);
-    _cache = result.map((k, v) => MapEntry(k, v as bool));
+    _cache = result.map((k, v) => MapEntry(k, (v as bool?) ?? false));
   }
 
   Future<void> _doRefresh() async {

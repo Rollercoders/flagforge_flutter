@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:test/test.dart';
 import 'package:flagforge_flutter/flagforge_flutter.dart';
 import 'mock_http_adapter.dart';
@@ -99,7 +98,7 @@ void main() {
       await client.initialize();
 
       adapter.setError(Exception('Network error'));
-      await client.refresh();
+      await expectLater(client.refresh(), throwsException);
 
       expect(client.isEnabled('flag-a'), isTrue);
     });
