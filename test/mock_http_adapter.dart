@@ -4,6 +4,7 @@ class MockHttpAdapter implements HttpAdapter {
   Map<String, dynamic>? _response;
   Exception? _error;
   int callCount = 0;
+  Map<String, dynamic>? lastBody;
 
   void setResponse(Map<String, dynamic> response) {
     _response = response;
@@ -22,6 +23,7 @@ class MockHttpAdapter implements HttpAdapter {
     Map<String, dynamic> body,
   ) async {
     callCount++;
+    lastBody = body;
     if (_error != null) throw _error!;
     if (_response != null) return _response!;
     throw StateError('MockHttpAdapter: nessuna risposta configurata');
