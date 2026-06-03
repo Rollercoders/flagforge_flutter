@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'config.dart';
 import 'http_adapter.dart';
-import 'models.dart';
 
 class FlagForgeClient {
   final FlagForgeConfig _config;
