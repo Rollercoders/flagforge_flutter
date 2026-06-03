@@ -1,0 +1,6 @@
+library flagforge_flutter;
+
+export 'src/models.dart';
+export 'src/config.dart';
+export 'src/http_adapter.dart' show HttpAdapter;
+export 'src/client.dart';
