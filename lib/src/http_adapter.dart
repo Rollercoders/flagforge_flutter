@@ -26,7 +26,7 @@ class HttpAdapterImpl implements HttpAdapter {
       body: jsonEncode(body),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
         'FlagForge HTTP error ${response.statusCode}: ${response.body}',
       );
