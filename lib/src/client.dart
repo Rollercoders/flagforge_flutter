@@ -70,7 +70,7 @@ class FlagForgeClient {
       await _applyAndPersist(flags);
     } on FlagForgeException catch (e) {
       _logger(FlagForgeLogLevel.warning,
-          'Fetch iniziale fallito, uso i valori disponibili: ${e.message}');
+          'Initial fetch failed, using available values: ${e.message}');
     }
 
     _timer =
@@ -90,7 +90,7 @@ class FlagForgeClient {
   bool isEnabled(String key) {
     if (!_initialized) {
       throw StateError(
-          'FlagForgeClient non inizializzato. Chiama initialize() prima.');
+          'FlagForgeClient not initialized. Call initialize() first.');
     }
     return _cache.isEnabled(key);
   }
@@ -113,7 +113,7 @@ class FlagForgeClient {
   Future<void> _applyAndPersist(Map<String, bool> flags) async {
     if (flags.isEmpty && !_cache.isEmpty) {
       _logger(FlagForgeLogLevel.warning,
-          'Risposta vuota dal server ignorata: mantengo i flag già in cache');
+          'Empty server response ignored: keeping the flags already in cache');
       return;
     }
     _applyFlags(flags);
@@ -135,8 +135,8 @@ class FlagForgeClient {
       final flags = await _fetchWithRetry();
       await _applyAndPersist(flags);
     } on FlagForgeException catch (e) {
-      _logger(FlagForgeLogLevel.warning,
-          'Refresh in background fallito: ${e.message}');
+      _logger(
+          FlagForgeLogLevel.warning, 'Background refresh failed: ${e.message}');
     }
   }
 }

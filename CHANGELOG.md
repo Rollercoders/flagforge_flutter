@@ -1,30 +1,35 @@
+## 1.0.1
+
+- Translate all user-facing text to English: README, CHANGELOG, the example app,
+  and every runtime exception/log message. No behavior changes.
+
 ## 1.0.0
 
-- **Offline-first**: astrazione `FlagStore` con default in-memory; i valori
-  persistiti sono disponibili all'avvio prima del fetch di rete.
-- **Fail-safe**: `initialize()` non lancia più per errori di rete; flag non
-  disponibili valgono `false` (tutto OFF).
-- **Resilienza**: `RetryPolicy` con backoff esponenziale, `timeout`
-  configurabile ed eccezioni tipizzate (`FlagForgeException` e sottotipi).
-- **Reattività**: `flagChanges` (Stream) e `watch(key)` (`ValueListenable`).
-- **Logging** configurabile via `FlagForgeLogger` (default no-op); rimosso `print`.
-- Rimosso il nome libreria deprecato; adottato `flutter_lints`.
-- Aggiunti example app e CI.
+- **Offline-first**: `FlagStore` abstraction with an in-memory default; persisted
+  values are available at startup before the network fetch.
+- **Fail-safe**: `initialize()` no longer throws on network errors; unavailable
+  flags are `false` (all OFF).
+- **Resilience**: `RetryPolicy` with exponential backoff, configurable `timeout`,
+  and typed exceptions (`FlagForgeException` and subtypes).
+- **Reactivity**: `flagChanges` (Stream) and `watch(key)` (`ValueListenable`).
+- **Logging** configurable via `FlagForgeLogger` (no-op default); removed `print`.
+- Removed the deprecated library name; adopted `flutter_lints`.
+- Added an example app and CI.
 
 ### Breaking changes
 
-- `initialize()` non lancia più in caso di errore di rete (prima sì). Usa
-  `refresh()` se devi intercettare gli errori di aggiornamento.
-- `HttpAdapter.post` ha un nuovo parametro nominale opzionale `timeout` (con
-  default): additivo per chi usa l'SDK, richiede un aggiornamento solo per chi
-  implementa un `HttpAdapter` custom.
+- `initialize()` no longer throws on network errors (it used to). Use `refresh()`
+  if you need to intercept update errors.
+- `HttpAdapter.post` has a new optional named `timeout` parameter (with a
+  default): additive for SDK consumers; only implementers of a custom
+  `HttpAdapter` need to update.
 
 ## 0.1.0
 
-- Versione iniziale.
-- `FlagForgeClient` con prefetch di tutti i flag all'avvio tramite `POST /api/evaluate/all`.
-- Cache locale con `isEnabled()` sincrono.
-- Refresh automatico in background con intervallo configurabile.
-- Fallback silenzioso su errore nei refresh periodici.
-- `EvaluationContext` per targeting per userId e attributi.
-- Astrazione `HttpAdapter` per testabilità completa senza rete.
+- Initial release.
+- `FlagForgeClient` with prefetch of all flags at startup via `POST /api/evaluate/all`.
+- Local cache with synchronous `isEnabled()`.
+- Automatic background refresh with a configurable interval.
+- Silent fallback on error during periodic refreshes.
+- `EvaluationContext` for targeting by userId and attributes.
+- `HttpAdapter` abstraction for full testability without networking.

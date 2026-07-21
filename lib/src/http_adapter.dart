@@ -43,20 +43,20 @@ class HttpAdapterImpl implements HttpAdapter {
           )
           .timeout(timeout);
     } on TimeoutException {
-      throw const FlagForgeNetworkException('Richiesta scaduta (timeout)');
+      throw const FlagForgeNetworkException('Request timed out');
     } on SocketException catch (e) {
-      throw FlagForgeNetworkException('Connessione fallita: ${e.message}');
+      throw FlagForgeNetworkException('Connection failed: ${e.message}');
     } on http.ClientException catch (e) {
-      throw FlagForgeNetworkException('Errore di rete: ${e.message}');
+      throw FlagForgeNetworkException('Network error: ${e.message}');
     }
 
     final code = response.statusCode;
     if (code == 401) {
-      throw const FlagForgeAuthException('API key mancante o non valida');
+      throw const FlagForgeAuthException('Missing or invalid API key');
     }
     if (code < 200 || code >= 300) {
       throw FlagForgeServerException(
-        'Errore server (${response.body})',
+        'Server error (${response.body})',
         code,
       );
     }
@@ -64,8 +64,7 @@ class HttpAdapterImpl implements HttpAdapter {
     try {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (_) {
-      throw const FlagForgeParseException(
-          'Risposta non in formato JSON valido');
+      throw const FlagForgeParseException('Response is not valid JSON');
     }
   }
 }

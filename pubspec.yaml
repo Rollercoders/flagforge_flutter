@@ -1,6 +1,6 @@
 name: flagforge_flutter
 description: Flutter SDK client for FlagForge, an open-source on-premise feature flagging platform. Supports prefetch, local cache, auto-refresh, and user targeting.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/Rollercoders/flagforge_flutter
 repository: https://github.com/Rollercoders/flagforge_flutter
 

@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
               : ValueListenableBuilder<bool>(
                   valueListenable: _client.watch('new-checkout-flow'),
                   builder: (_, enabled, __) => Text(
-                    enabled ? 'Nuovo checkout attivo' : 'Checkout classico',
+                    enabled ? 'New checkout enabled' : 'Classic checkout',
                   ),
                 ),
         ),
@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
             try {
               await _client.refresh();
             } catch (_) {
-              // in un'app reale: mostra un messaggio all'utente
+              // in a real app: show a message to the user
             }
           },
           child: const Icon(Icons.refresh),
