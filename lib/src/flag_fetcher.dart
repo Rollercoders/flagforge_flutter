@@ -40,7 +40,7 @@ class FlagFetcher {
       } else {
         _logger(
           FlagForgeLogLevel.warning,
-          'Valore non booleano per il flag "$key" ($value), uso false',
+          'Non-boolean value for flag "$key" ($value), using false',
         );
         result[key.toString()] = false;
       }

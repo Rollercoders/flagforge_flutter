@@ -1,14 +1,14 @@
 # flagforge_flutter
 
-Client Flutter per [FlagForge](https://github.com/rollercoders/flagforge) —
-piattaforma on-premise di feature flag. Offline-first, resiliente alla rete,
-reattivo, zero dipendenze extra oltre a `http`.
+Flutter client for [FlagForge](https://github.com/rollercoders/flagforge) — the
+on-premise feature flagging platform. Offline-first, network-resilient,
+reactive, with no extra dependencies beyond `http`.
 
-## Installazione
+## Installation
 
 ```yaml
 dependencies:
-  flagforge_flutter: ^1.0.0
+  flagforge_flutter: ^1.0.1
 ```
 
 ## Quick start
@@ -27,37 +27,37 @@ final client = FlagForgeClient(
 await client.initialize();
 
 if (client.isEnabled('new-checkout-flow')) {
-  // mostra il nuovo checkout
+  // show the new checkout
 }
 
-client.dispose(); // alla chiusura dell'app
+client.dispose(); // when the app closes
 ```
 
-## Comportamento
+## Behavior
 
-- **Prefetch all'avvio**: `initialize()` carica tutti i flag in una chiamata.
-- **Offline-first**: se fornisci un `FlagStore` persistente, all'avvio i valori
-  salvati sono disponibili subito, prima del fetch di rete.
-- **Fail-safe**: `initialize()` non lancia mai per errori di rete. Se non ci
-  sono valori (né cache né rete), ogni flag vale `false` (tutto OFF).
-- **Cache locale sincrona**: `isEnabled()` non fa I/O.
-- **Refresh automatico** in background ogni `refreshInterval`.
-- **Resilienza**: retry con backoff su errori di rete/5xx; timeout configurabile.
+- **Prefetch at startup**: `initialize()` loads all flags in a single call.
+- **Offline-first**: if you provide a persistent `FlagStore`, the saved values
+  are available immediately at startup, before the network fetch.
+- **Fail-safe**: `initialize()` never throws on network errors. If no values are
+  available (neither cache nor network), every flag is `false` (all OFF).
+- **Synchronous local cache**: `isEnabled()` performs no I/O.
+- **Automatic background refresh** every `refreshInterval`.
+- **Resilience**: retry with backoff on network/5xx errors; configurable timeout.
 
-## Reattività
+## Reactivity
 
 ```dart
-// singolo flag, per ValueListenableBuilder
+// single flag, for ValueListenableBuilder
 ValueListenableBuilder<bool>(
   valueListenable: client.watch('new-checkout-flow'),
   builder: (_, enabled, __) => enabled ? NewCheckout() : OldCheckout(),
 );
 
-// tutti i flag, come stream
-client.flagChanges.listen((flags) => print('flag aggiornati: $flags'));
+// all flags, as a stream
+client.flagChanges.listen((flags) => print('flags updated: $flags'));
 ```
 
-## Configurazione
+## Configuration
 
 ```dart
 FlagForgeConfig(
@@ -66,15 +66,15 @@ FlagForgeConfig(
   refreshInterval: Duration(minutes: 5),
   timeout: Duration(seconds: 10),
   retryPolicy: RetryPolicy(maxRetries: 3),
-  store: MySharedPrefsStore(),        // persistenza opzionale (vedi sotto)
+  store: MySharedPrefsStore(),        // optional persistence (see below)
   logger: (level, msg, [e]) => debugPrint('[$level] $msg'),
 );
 ```
 
-## Cache persistente
+## Persistent cache
 
-L'SDK non impone una dipendenza di storage. Per persistere su disco implementa
-`FlagStore`, ad esempio con `shared_preferences`:
+The SDK does not impose a storage dependency. To persist to disk, implement
+`FlagStore`, for example with `shared_preferences`:
 
 ```dart
 import 'dart:convert';
@@ -106,24 +106,25 @@ class SharedPrefsFlagStore implements FlagStore {
 }
 ```
 
-## Ciclo di vita
+## Lifecycle
 
-| Metodo | Descrizione |
+| Method | Description |
 |--------|-------------|
-| `initialize()` | Carica i flag (offline-first) e avvia il timer. Non lancia per errori di rete. Idempotente. |
-| `isEnabled(key)` | Legge dalla cache. `false` se sconosciuto. `StateError` se non inizializzato. |
-| `refresh()` | Forza un aggiornamento. Propaga `FlagForgeException` in caso di errore. |
-| `watch(key)` | `ValueListenable<bool>` per la UI reattiva. |
-| `flagChanges` | `Stream` della mappa completa a ogni aggiornamento. |
-| `dispose()` | Ferma il timer e libera le risorse. |
+| `initialize()` | Loads flags (offline-first) and starts the timer. Never throws on network errors. Idempotent. |
+| `isEnabled(key)` | Reads from the cache. `false` if unknown. `StateError` if not initialized. |
+| `refresh()` | Forces an update. Propagates `FlagForgeException` on error. |
+| `watch(key)` | `ValueListenable<bool>` for reactive UI. |
+| `flagChanges` | `Stream` of the full map on every update. |
+| `dispose()` | Stops the timer and releases resources. |
 
-## Errori
+## Errors
 
-Tutte le eccezioni derivano da `FlagForgeException`:
+All exceptions derive from `FlagForgeException`:
 `FlagForgeNetworkException`, `FlagForgeServerException`, `FlagForgeAuthException`,
-`FlagForgeParseException`. Solo `refresh()` le propaga; `initialize()` è fail-safe.
+`FlagForgeParseException`. Only `refresh()` propagates them; `initialize()` is
+fail-safe.
 
 ## Roadmap
 
-Supporto a flag multivariante (stringhe/numeri/JSON) quando il server FlagForge
-lo esporrà, in modo additivo e senza breaking change.
+Support for multivariate flags (strings/numbers/JSON) once the FlagForge server
+exposes them, in an additive way and without breaking changes.

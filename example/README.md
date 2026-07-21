@@ -1,9 +1,9 @@
-# flagforge_flutter — esempio
+# flagforge_flutter — example
 
-App Flutter minimale che mostra come inizializzare il client, leggere un flag
-in modo reattivo con `watch` e forzare un refresh.
+A minimal Flutter app that shows how to initialize the client, read a flag
+reactively with `watch`, and force a refresh.
 
-Aggiorna `baseUrl` e `apiKey` in `lib/main.dart` con i valori del tuo server
-FlagForge, poi:
+Update `baseUrl` and `apiKey` in `lib/main.dart` with your FlagForge server
+values, then:
 
     flutter run

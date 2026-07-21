@@ -45,7 +45,7 @@ class RetryPolicy {
         final delay = delayForAttempt(attempt);
         logger(
           FlagForgeLogLevel.warning,
-          'Fetch fallito (tentativo ${attempt + 1}), riprovo tra '
+          'Fetch failed (attempt ${attempt + 1}), retrying in '
           '${delay.inMilliseconds}ms: ${e.message}',
         );
         await doSleep(delay);
