@@ -111,6 +111,11 @@ class FlagForgeClient {
   }
 
   Future<void> _applyAndPersist(Map<String, bool> flags) async {
+    if (flags.isEmpty && !_cache.isEmpty) {
+      _logger(FlagForgeLogLevel.warning,
+          'Risposta vuota dal server ignorata: mantengo i flag già in cache');
+      return;
+    }
     _applyFlags(flags);
     await _store.write(flags);
   }

@@ -15,7 +15,9 @@
 
 - `initialize()` non lancia più in caso di errore di rete (prima sì). Usa
   `refresh()` se devi intercettare gli errori di aggiornamento.
-- `HttpAdapter.post` ha un nuovo parametro nominale opzionale `timeout`.
+- `HttpAdapter.post` ha un nuovo parametro nominale opzionale `timeout` (con
+  default): additivo per chi usa l'SDK, richiede un aggiornamento solo per chi
+  implementa un `HttpAdapter` custom.
 
 ## 0.1.0
 

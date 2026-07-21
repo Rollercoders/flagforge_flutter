@@ -113,6 +113,27 @@ void main() {
       expect(client.isEnabled('a'), isTrue);
       client.dispose();
     });
+
+    test('una risposta vuota non sovrascrive una cache non vuota', () async {
+      final store = InMemoryFlagStore();
+      adapter.setResponse({'a': true});
+      final client = makeClient(adapter, store: store);
+      await client.initialize();
+      adapter.setResponse({});
+      await client.refresh();
+      expect(client.isEnabled('a'), isTrue);
+      expect(await store.read(), equals({'a': true}));
+      client.dispose();
+    });
+
+    test('una risposta vuota su cache vuota resta all-OFF', () async {
+      adapter.setResponse({});
+      final client = makeClient(adapter);
+      await expectLater(client.initialize(), completes);
+      expect(client.isInitialized, isTrue);
+      expect(client.isEnabled('anything'), isFalse);
+      client.dispose();
+    });
   });
 
   group('reattività', () {

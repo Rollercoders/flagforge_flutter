@@ -56,4 +56,13 @@ void main() {
     final flags = await makeFetcher(adapter).fetch();
     expect(flags, isEmpty);
   });
+
+  test('se "results" non è una Map, non è trattato come wrapper', () async {
+    // 'results' non è una Map: non fa da wrapper, si passa al parsing piatto.
+    // Il suo valore (non booleano) degrada a false; 'a' resta un flag valido.
+    adapter.setResponse({'results': 'not-a-map', 'a': true});
+    final flags = await makeFetcher(adapter).fetch();
+    expect(flags['a'], isTrue);
+    expect(flags['results'], isFalse);
+  });
 }

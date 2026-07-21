@@ -48,7 +48,13 @@ class _MyAppState extends State<MyApp> {
                 ),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _client.refresh(),
+          onPressed: () async {
+            try {
+              await _client.refresh();
+            } catch (_) {
+              // in un'app reale: mostra un messaggio all'utente
+            }
+          },
           child: const Icon(Icons.refresh),
         ),
       ),
