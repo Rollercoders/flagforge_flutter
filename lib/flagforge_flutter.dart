@@ -7,3 +7,4 @@ export 'src/config.dart';
 export 'src/http_adapter.dart' show HttpAdapter;
 export 'src/client.dart';
 export 'src/retry_policy.dart';
+export 'src/flag_store.dart';
