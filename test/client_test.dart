@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flagforge_flutter/flagforge_flutter.dart';
 import 'mock_http_adapter.dart';
