@@ -1,37 +1,70 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'exceptions.dart';
 
+/// Abstraction over the HTTP transport used to fetch flags.
+///
+/// Implement this to plug in a custom client for testing or advanced needs.
 abstract class HttpAdapter {
+  /// Performs a POST and returns the decoded JSON map on success.
+  ///
+  /// Throws a [FlagForgeException] subtype on any failure.
   Future<Map<String, dynamic>> post(
     String url,
     Map<String, String> headers,
-    Map<String, dynamic> body,
-  );
+    Map<String, dynamic> body, {
+    Duration timeout,
+  });
 }
 
+/// Default [HttpAdapter] backed by `package:http`.
 class HttpAdapterImpl implements HttpAdapter {
   final http.Client _client;
 
+  /// Creates a [HttpAdapterImpl]. An optional [client] can be injected.
   HttpAdapterImpl({http.Client? client}) : _client = client ?? http.Client();
 
   @override
   Future<Map<String, dynamic>> post(
     String url,
     Map<String, String> headers,
-    Map<String, dynamic> body,
-  ) async {
-    final response = await _client.post(
-      Uri.parse(url),
-      headers: {...headers, 'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    Map<String, dynamic> body, {
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    http.Response response;
+    try {
+      response = await _client
+          .post(
+            Uri.parse(url),
+            headers: {...headers, 'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const FlagForgeNetworkException('Richiesta scaduta (timeout)');
+    } on SocketException catch (e) {
+      throw FlagForgeNetworkException('Connessione fallita: ${e.message}');
+    } on http.ClientException catch (e) {
+      throw FlagForgeNetworkException('Errore di rete: ${e.message}');
+    }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'FlagForge HTTP error ${response.statusCode}: ${response.body}',
+    final code = response.statusCode;
+    if (code == 401) {
+      throw const FlagForgeAuthException('API key mancante o non valida');
+    }
+    if (code < 200 || code >= 300) {
+      throw FlagForgeServerException(
+        'Errore server (${response.body})',
+        code,
       );
     }
 
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    try {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw const FlagForgeParseException('Risposta non in formato JSON valido');
+    }
   }
 }

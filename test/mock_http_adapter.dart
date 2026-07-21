@@ -20,8 +20,9 @@ class MockHttpAdapter implements HttpAdapter {
   Future<Map<String, dynamic>> post(
     String url,
     Map<String, String> headers,
-    Map<String, dynamic> body,
-  ) async {
+    Map<String, dynamic> body, {
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
     callCount++;
     lastBody = body;
     if (_error != null) throw _error!;
