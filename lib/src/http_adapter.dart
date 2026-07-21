@@ -64,7 +64,8 @@ class HttpAdapterImpl implements HttpAdapter {
     try {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (_) {
-      throw const FlagForgeParseException('Risposta non in formato JSON valido');
+      throw const FlagForgeParseException(
+          'Risposta non in formato JSON valido');
     }
   }
 }

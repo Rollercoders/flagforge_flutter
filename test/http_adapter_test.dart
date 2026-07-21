@@ -3,7 +3,6 @@ import 'package:http/testing.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:flagforge_flutter/flagforge_flutter.dart';
-import 'package:flagforge_flutter/src/http_adapter.dart';
 
 HttpAdapterImpl adapterReturning(http.Response response) {
   return HttpAdapterImpl(

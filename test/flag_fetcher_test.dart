@@ -42,7 +42,8 @@ void main() {
     adapter.setResponse({});
     await makeFetcher(
       adapter,
-      context: EvaluationContext(userId: 'u1', attributes: {'plan': 'pro'}),
+      context:
+          const EvaluationContext(userId: 'u1', attributes: {'plan': 'pro'}),
     ).fetch();
     expect(adapter.lastUrl, 'http://localhost:3000/api/evaluate/all');
     expect(adapter.lastHeaders?['Authorization'], 'Bearer ff_test');

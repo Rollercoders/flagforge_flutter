@@ -68,7 +68,8 @@ void main() {
     test('invia il contesto globale', () async {
       adapter.setResponse({});
       final client = makeClient(adapter,
-          context: EvaluationContext(userId: 'u1', attributes: {'p': 'pro'}));
+          context:
+              const EvaluationContext(userId: 'u1', attributes: {'p': 'pro'}));
       await client.initialize();
       expect(adapter.lastBody?['userId'], 'u1');
       expect(adapter.lastBody?['attributes'], equals({'p': 'pro'}));

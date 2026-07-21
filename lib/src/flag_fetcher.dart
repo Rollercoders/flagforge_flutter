@@ -26,8 +26,8 @@ class FlagFetcher {
     final headers = {'Authorization': 'Bearer ${_config.apiKey}'};
     final body = _config.context?.toJson() ?? <String, dynamic>{};
 
-    final raw = await _adapter.post(url, headers, body,
-        timeout: _config.timeout);
+    final raw =
+        await _adapter.post(url, headers, body, timeout: _config.timeout);
     return _parse(raw);
   }
 

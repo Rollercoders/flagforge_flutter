@@ -4,7 +4,7 @@ import 'package:flagforge_flutter/flagforge_flutter.dart';
 void main() {
   group('EvaluationContext', () {
     test('serializza correttamente con tutti i campi', () {
-      final ctx = EvaluationContext(
+      const ctx = EvaluationContext(
         userId: 'user-123',
         attributes: {'plan': 'premium'},
       );
@@ -14,7 +14,7 @@ void main() {
     });
 
     test('serializza correttamente senza campi opzionali', () {
-      final ctx = EvaluationContext();
+      const ctx = EvaluationContext();
       final json = ctx.toJson();
       expect(json.containsKey('userId'), isFalse);
       expect(json.containsKey('attributes'), isFalse);

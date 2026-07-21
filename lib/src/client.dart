@@ -73,7 +73,8 @@ class FlagForgeClient {
           'Fetch iniziale fallito, uso i valori disponibili: ${e.message}');
     }
 
-    _timer = Timer.periodic(_config.refreshInterval, (_) => _backgroundRefresh());
+    _timer =
+        Timer.periodic(_config.refreshInterval, (_) => _backgroundRefresh());
     _initialized = true;
   }
 
