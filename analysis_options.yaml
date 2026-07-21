@@ -1,6 +1,7 @@
-include: package:flutter/analysis_options_user.yaml
+include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
     - prefer_final_fields
     - always_declare_return_types
+    - public_member_api_docs

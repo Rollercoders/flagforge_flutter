@@ -1,0 +1,17 @@
+name: flagforge_flutter_example
+description: Esempio d'uso del client FlagForge.
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flagforge_flutter:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^4.0.0

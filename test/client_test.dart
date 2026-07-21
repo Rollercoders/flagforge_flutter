@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:flagforge_flutter/flagforge_flutter.dart';
 import 'mock_http_adapter.dart';
 
@@ -6,6 +6,7 @@ FlagForgeClient makeClient(
   MockHttpAdapter adapter, {
   Duration refreshInterval = const Duration(hours: 24),
   EvaluationContext? context,
+  FlagStore? store,
 }) {
   return FlagForgeClient(
     FlagForgeConfig(
@@ -13,6 +14,8 @@ FlagForgeClient makeClient(
       apiKey: 'ff_test',
       refreshInterval: refreshInterval,
       context: context,
+      retryPolicy: const RetryPolicy(maxRetries: 0),
+      store: store,
     ),
     adapter: adapter,
   );
@@ -20,102 +23,154 @@ FlagForgeClient makeClient(
 
 void main() {
   late MockHttpAdapter adapter;
+  setUp(() => adapter = MockHttpAdapter());
 
-  setUp(() {
-    adapter = MockHttpAdapter();
-  });
-
-  group('initialize()', () {
-    test('popola la cache con i flag ricevuti', () async {
+  group('initialize() fail-safe', () {
+    test('popola la cache dai flag di rete', () async {
       adapter.setResponse({'dark-mode': true, 'checkout-v2': false});
       final client = makeClient(adapter);
-
       await client.initialize();
-
       expect(client.isEnabled('dark-mode'), isTrue);
       expect(client.isEnabled('checkout-v2'), isFalse);
       expect(client.isInitialized, isTrue);
+      client.dispose();
     });
 
-    test('lancia eccezione se il server non è raggiungibile', () async {
-      adapter.setError(Exception('Connection refused'));
+    test('non lancia se la rete fallisce e non c\'è cache: tutto OFF',
+        () async {
+      adapter.setError(const FlagForgeNetworkException('down'));
       final client = makeClient(adapter);
-
-      expect(() => client.initialize(), throwsException);
-      expect(client.isInitialized, isFalse);
+      await client.initialize();
+      expect(client.isInitialized, isTrue);
+      expect(client.isEnabled('qualsiasi'), isFalse);
+      client.dispose();
     });
 
-    test('invia il contesto globale nella richiesta', () async {
-      adapter.setResponse({});
-      final client = makeClient(
-        adapter,
-        context: EvaluationContext(userId: 'user-42', attributes: {'plan': 'pro'}),
-      );
-
+    test('usa la cache persistita se la rete fallisce', () async {
+      final store = InMemoryFlagStore();
+      await store.write({'a': true});
+      adapter.setError(const FlagForgeNetworkException('down'));
+      final client = makeClient(adapter, store: store);
       await client.initialize();
+      expect(client.isEnabled('a'), isTrue);
+      client.dispose();
+    });
 
-      expect(adapter.lastBody?['userId'], equals('user-42'));
-      expect(adapter.lastBody?['attributes'], equals({'plan': 'pro'}));
+    test('persiste i flag ricevuti nello store', () async {
+      final store = InMemoryFlagStore();
+      adapter.setResponse({'a': true});
+      final client = makeClient(adapter, store: store);
+      await client.initialize();
+      expect(await store.read(), equals({'a': true}));
+      client.dispose();
+    });
+
+    test('invia il contesto globale', () async {
+      adapter.setResponse({});
+      final client = makeClient(adapter,
+          context:
+              const EvaluationContext(userId: 'u1', attributes: {'p': 'pro'}));
+      await client.initialize();
+      expect(adapter.lastBody?['userId'], 'u1');
+      expect(adapter.lastBody?['attributes'], equals({'p': 'pro'}));
+      client.dispose();
     });
   });
 
   group('isEnabled()', () {
-    test('restituisce false per flag sconosciuto', () async {
-      adapter.setResponse({'known-flag': true});
+    test('false per flag sconosciuto', () async {
+      adapter.setResponse({'known': true});
       final client = makeClient(adapter);
       await client.initialize();
-
-      expect(client.isEnabled('unknown-flag'), isFalse);
+      expect(client.isEnabled('unknown'), isFalse);
+      client.dispose();
     });
 
-    test('lancia StateError se non inizializzato', () {
-      adapter.setResponse({});
+    test('StateError se non inizializzato', () {
       final client = makeClient(adapter);
-
-      expect(
-        () => client.isEnabled('some-flag'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => client.isEnabled('x'), throwsA(isA<StateError>()));
     });
   });
 
   group('refresh()', () {
-    test('aggiorna la cache con i nuovi valori', () async {
-      adapter.setResponse({'flag-a': false});
+    test('aggiorna la cache', () async {
+      adapter.setResponse({'a': false});
       final client = makeClient(adapter);
       await client.initialize();
-      expect(client.isEnabled('flag-a'), isFalse);
-
-      adapter.setResponse({'flag-a': true});
+      adapter.setResponse({'a': true});
       await client.refresh();
-
-      expect(client.isEnabled('flag-a'), isTrue);
+      expect(client.isEnabled('a'), isTrue);
+      client.dispose();
     });
 
-    test('mantiene la cache precedente se il refresh fallisce', () async {
-      adapter.setResponse({'flag-a': true});
+    test('propaga l\'eccezione tipizzata e mantiene la cache', () async {
+      adapter.setResponse({'a': true});
       final client = makeClient(adapter);
       await client.initialize();
+      adapter.setError(const FlagForgeServerException('boom', 500));
+      await expectLater(
+          client.refresh(), throwsA(isA<FlagForgeServerException>()));
+      expect(client.isEnabled('a'), isTrue);
+      client.dispose();
+    });
 
-      adapter.setError(Exception('Network error'));
-      await expectLater(client.refresh(), throwsException);
+    test('una risposta vuota non sovrascrive una cache non vuota', () async {
+      final store = InMemoryFlagStore();
+      adapter.setResponse({'a': true});
+      final client = makeClient(adapter, store: store);
+      await client.initialize();
+      adapter.setResponse({});
+      await client.refresh();
+      expect(client.isEnabled('a'), isTrue);
+      expect(await store.read(), equals({'a': true}));
+      client.dispose();
+    });
 
-      expect(client.isEnabled('flag-a'), isTrue);
+    test('una risposta vuota su cache vuota resta all-OFF', () async {
+      adapter.setResponse({});
+      final client = makeClient(adapter);
+      await expectLater(client.initialize(), completes);
+      expect(client.isInitialized, isTrue);
+      expect(client.isEnabled('anything'), isFalse);
+      client.dispose();
+    });
+  });
+
+  group('reattività', () {
+    test('flagChanges emette a ogni update', () async {
+      adapter.setResponse({'a': true});
+      final client = makeClient(adapter);
+      final emissions = <Map<String, bool>>[];
+      final sub = client.flagChanges.listen(emissions.add);
+      await client.initialize();
+      adapter.setResponse({'a': false});
+      await client.refresh();
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.length, greaterThanOrEqualTo(2));
+      expect(emissions.last, equals({'a': false}));
+      await sub.cancel();
+      client.dispose();
+    });
+
+    test('watch notifica al cambio di un flag', () async {
+      adapter.setResponse({'a': false});
+      final client = makeClient(adapter);
+      await client.initialize();
+      final listenable = client.watch('a');
+      expect(listenable.value, isFalse);
+      var notified = false;
+      listenable.addListener(() => notified = true);
+      adapter.setResponse({'a': true});
+      await client.refresh();
+      expect(listenable.value, isTrue);
+      expect(notified, isTrue);
+      client.dispose();
     });
   });
 
   group('dispose()', () {
-    test('è no-op sicuro se initialize() non è mai stata chiamata', () {
+    test('safe se initialize non chiamato', () {
       final client = makeClient(adapter);
-      expect(() => client.dispose(), returnsNormally);
-    });
-
-    test('è no-op sicuro se initialize() è fallita', () async {
-      adapter.setError(Exception('fail'));
-      final client = makeClient(adapter);
-      try {
-        await client.initialize();
-      } catch (_) {}
       expect(() => client.dispose(), returnsNormally);
     });
   });

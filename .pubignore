@@ -1,0 +1,4 @@
+doc/superpowers/
+.superpowers/
+.github/
+build/
